@@ -17,7 +17,7 @@
 
     <context:component-scan base-package="com.gigaspaces.sbp"/>
 
-    <os-core:space id="space" url="/./WatchRepairSuite?locators=localhost:4174&amp;groups=watches" />
+    <os-core:space id="space" url="/./GigaSpaceI10nSuite?locators=localhost:4174&amp;groups=gigaspaceApi" />
     <os-core:giga-space id="gigaSpace" space="space"/>
     <os-remoting:service-exporter id="serviceExporter"/>
 

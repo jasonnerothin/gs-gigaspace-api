@@ -34,7 +34,7 @@ class GigaSpaceI10nSuite extends GsI10nSuite with ShouldMatchers{
     , numInstancesProperty -> int2Integer(numPartitions)
     , numBackupsProperty -> int2Integer(0)
     , instanceIdProperty -> int2Integer(1)
-    , spaceUrlProperty -> s"jini:/*/*/$spaceName?locators=localhost:4174&groups=watches"
+    , spaceUrlProperty -> s"jini:/*/*/$spaceName?locators=localhost:4174&groups=gigaspaceApi"
     , spaceModeProperty -> SpaceMode.Embedded
     , configLocationProperty -> "classpath*:/META-INF/Spring/pu.xml"
     , localViewQueryListProperty -> List[SQLQuery[_]]()
