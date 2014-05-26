@@ -8,6 +8,7 @@ import javax.annotation.Resource
 import org.openspaces.core.GigaSpace
 import scala.concurrent._
 import ExecutionContext.Implicits.global
+import org.slf4j.{LoggerFactory, Logger}
 
 /**
  * Created by IntelliJ IDEA.
@@ -17,6 +18,8 @@ import ExecutionContext.Implicits.global
  */
 @RemotingService
 class TxnMakerServerSideService extends TransactionMaker {
+
+  val logger:Logger = LoggerFactory.getLogger(getClass)
 
   @Resource
   var gigaSpace: GigaSpace = null
@@ -28,6 +31,8 @@ class TxnMakerServerSideService extends TransactionMaker {
     */
   @Transactional
   def longTransaction(routeId: Integer, spaceId: java.lang.String, howLongInMillis: Integer = 50): Unit = {
+
+    logger.trace("long transaction received...")
 
     val idQuery = new IdQuery[SpaceThing](classOf[SpaceThing], spaceId, routeId)
     val changeSet = new ChangeSet().set("payload", "laDeeDah")

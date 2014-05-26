@@ -31,3 +31,5 @@ target
 .build
 .gradle
 *.jar
+
+gslicense.xml
