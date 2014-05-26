@@ -2,18 +2,14 @@ package com.gigaspaces.sbp
 
 import com.gigaspaces.GsI10nSuite
 import scala.util.Random
-import org.scalatest.ConfigMap
+import org.scalatest.{BeforeAndAfterAllConfigMap, ConfigMap}
 import com.j_spaces.core.client.SQLQuery
 import org.springframework.context.support.ClassPathXmlApplicationContext
-import org.openspaces.core.GigaSpace
 import org.slf4j.{Logger, LoggerFactory}
 import org.specs2.matcher.ShouldMatchers
-import java.util
-import com.gigaspaces.client.ChangeSet
-import com.gigaspaces.async.AsyncFutureListener
-import com.gigaspaces.query.IdQuery
-import org.springframework.transaction.annotation.Transactional
-import scala.util.control.NonFatal
+import scala.concurrent.Future
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /** Created by IntelliJ IDEA.
   * User: jason
@@ -22,7 +18,7 @@ import scala.util.control.NonFatal
   * NOTE: In order for this test to run with two partitions, an appropriate gslicense.xml file
   * should be installed at src/test/resources/gslicense.xml
   */
-class GigaSpaceApiSuite extends GsI10nSuite with ShouldMatchers{
+class GigaSpaceApiSuite extends GsI10nSuite with ShouldMatchers with BeforeAndAfterAllConfigMap{
 
   val logger:Logger = LoggerFactory.getLogger(getClass)
 
@@ -39,14 +35,14 @@ class GigaSpaceApiSuite extends GsI10nSuite with ShouldMatchers{
     , instanceIdProperty -> int2Integer(1)
     , spaceUrlProperty -> s"jini:/*/*/$spaceName?groups=gigaspaceApi"
     , spaceModeProperty -> SpaceMode.Embedded
-    , configLocationProperty -> s"classpath:$spaceName.xml"
+    , configLocationProperty -> s"classpath:${spaceName}Server.xml"
     , localViewQueryListProperty -> List[SQLQuery[_]]()
   )
 
   val defaultConfigMap = new ConfigMap(defaults)
+  lazy val clientContext: ClassPathXmlApplicationContext = loadContext()
 
-  // fields initialized for test
-  var testThings: Seq[SpaceThing] = null
+
 
   // initialization methods
 
@@ -60,12 +56,17 @@ class GigaSpaceApiSuite extends GsI10nSuite with ShouldMatchers{
 
   }
 
+  override def afterAll(cm: ConfigMap) : Unit = {
+//    ec.shutdown()
+  }
 
-  def loadContext(descriptor: String) : ClassPathXmlApplicationContext = {
+  def loadContext(descriptor: String = s"classpath:${spaceName}Client.xml") : ClassPathXmlApplicationContext = {
     new ClassPathXmlApplicationContext(descriptor)
   }
 
   // TESTS
+
+  lazy val txnMakerUser = clientContext.getBean("txnMakerUserOnClientSide").asInstanceOf[TxnMakerUserOnClientSide]
 
   test("test read timeout throws ") {
 
@@ -73,30 +74,17 @@ class GigaSpaceApiSuite extends GsI10nSuite with ShouldMatchers{
     val testPayload = "something-something"
     val routeId = 0
     val testThing:SpaceThing = generateTestSpaceThing(testPayload, routeId = routeId)
-    val spaceId = gigaSpace.write(testThing).getUID.asInstanceOf[java.lang.String]
+    val spaceId = gigaSpace.write(testThing).getUID
 
-    longTransaction(routeId, spaceId, howLongInMillis = 50)
-    gigaSpace.readById(classOf[SpaceThing], spaceId, 1)
+    val future = Future {
+      txnMakerUser.longTransaction(routeId, spaceId, 10)
+    }
+
+    gigaSpace.readById(classOf[SpaceThing], spaceId, 1) // read before the previous
 
   }
 
   // TEST DATA GENERATION
-
-  @Transactional
-  def longTransaction(routeId: Int, spaceId: java.lang.String, howLongInMillis: Int = 50 ) {
-
-    val idQuery = new IdQuery[SpaceThing](classOf[SpaceThing], spaceId, routeId)
-    val changeSet = new ChangeSet().set("payload", "laDeeDah")
-    val result = gigaSpace.change(idQuery, changeSet)
-
-    try{
-      Thread.sleep(howLongInMillis)
-    } catch{
-      case e: InterruptedException => Thread.currentThread().interrupt()
-      case NonFatal(e) => throw new IllegalStateException(e)
-    }
-
-  }
 
   def generateTestSpaceThing(payload: String = rand.nextString(8),
                              routeId: Int = rand.nextInt(numPartitions),
