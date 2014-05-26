@@ -19,7 +19,7 @@ package com.gigaspaces
 import org.scalatest._
 import org.openspaces.core.{GigaSpaceConfigurer, GigaSpace}
 import org.openspaces.core.cluster.ClusterInfo
-import org.openspaces.pu.container.{ProcessingUnitContainerProvider, ProcessingUnitContainer}
+import org.openspaces.pu.container.ProcessingUnitContainer
 import org.openspaces.core.space.UrlSpaceConfigurer
 import org.openspaces.core.space.cache.{LocalViewSpaceConfigurer, LocalCacheSpaceConfigurer}
 import com.j_spaces.core.client.SQLQuery
@@ -49,7 +49,6 @@ abstract class GsI10nSuite extends FunSuite with BeforeAndAfterAllConfigMap with
   /**
    * Test instances. The purpose of this class is to initialize these members
    */
-  protected var containerProvider: ProcessingUnitContainerProvider = null
   protected var container: ProcessingUnitContainer = null
   protected var gigaSpace: GigaSpace = null
 
@@ -69,14 +68,7 @@ abstract class GsI10nSuite extends FunSuite with BeforeAndAfterAllConfigMap with
 
   /* Default setup/tear-down behaviors */
 
-  override def beforeAll(configMap: ConfigMap = new ConfigMap(Map[String, Any]())): Unit = {
-
-    setupWith(configMap)
-
-  }
-
   protected def setupWith(configMap: ConfigMap): Unit = {
-    containerProvider = createProvider(configMap)
     container = createContainer(configMap)
     gigaSpace = createGigaSpace(configMap)
   }
@@ -93,11 +85,6 @@ abstract class GsI10nSuite extends FunSuite with BeforeAndAfterAllConfigMap with
         defaults.get(propertyName)
     }
     innerP
-//    innerP match {
-//      case Some(q) => q
-//      case _ =>
-//        throw new UnsupportedOperationException(String.format("No value exists for property name: [%s].", propertyName))
-//    }
   }
 
   /* i10n infrastructure setup methods */
@@ -146,15 +133,13 @@ abstract class GsI10nSuite extends FunSuite with BeforeAndAfterAllConfigMap with
 
   }
 
-  private def createProvider(configMap: ConfigMap): ProcessingUnitContainerProvider = {
+  private def createContainer(configMap: ConfigMap): ProcessingUnitContainer = {
     val containerProvider = new IntegratedProcessingUnitContainerProvider
     containerProvider.setClusterInfo(createClusterInfo(configMap))
-    containerProvider.addConfigLocation(getProperty(configLocationProperty, configMap).asInstanceOf[String])
-    containerProvider
-  }
-
-  private def createContainer(configMap: ConfigMap): ProcessingUnitContainer = {
-    containerProvider.createContainer()
+    val loc = getProperty(configLocationProperty, configMap).asInstanceOf[String]
+    containerProvider.addConfigLocation(loc)
+    val container:ProcessingUnitContainer = containerProvider.createContainer()
+    container
   }
 
 }
