@@ -1,16 +1,17 @@
 package com.gigaspaces.sbp
 
 import com.gigaspaces.GsI10nSuite
-import scala.util.Random
+import scala.util.{Success, Failure, Random}
 import org.scalatest.{BeforeAndAfterAllConfigMap, ConfigMap}
 import com.j_spaces.core.client.SQLQuery
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import org.slf4j.{Logger, LoggerFactory}
 import org.specs2.matcher.ShouldMatchers
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Promise, ExecutionContext, Future}
 import concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import net.jini.core.transaction.TimeoutExpiredException
 
 /** Created by IntelliJ IDEA.
   * User: jason
@@ -19,9 +20,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
   * NOTE: In order for this test to run with two partitions, an appropriate gslicense.xml file
   * should be installed at src/test/resources/gslicense.xml
   */
-class GigaSpaceApiSuite extends GsI10nSuite with ShouldMatchers with BeforeAndAfterAllConfigMap{
+class GigaSpaceApiSuite extends GsI10nSuite with ShouldMatchers with BeforeAndAfterAllConfigMap {
 
-  val logger:Logger = LoggerFactory.getLogger(getClass)
+  val logger: Logger = LoggerFactory.getLogger(getClass)
 
   // SETUP CONFIG
   val rand = new Random(System.currentTimeMillis())
@@ -50,10 +51,10 @@ class GigaSpaceApiSuite extends GsI10nSuite with ShouldMatchers with BeforeAndAf
   override def beforeEach(): Unit = {
   }
 
-  override def afterAll(cm: ConfigMap) : Unit = {
+  override def afterAll(cm: ConfigMap): Unit = {
   }
 
-  def loadContext(descriptor: String = s"classpath:${spaceName}Client.xml") : ClassPathXmlApplicationContext = {
+  def loadContext(descriptor: String = s"classpath:${spaceName}Client.xml"): ClassPathXmlApplicationContext = {
     new ClassPathXmlApplicationContext(descriptor)
   }
 
@@ -66,39 +67,54 @@ class GigaSpaceApiSuite extends GsI10nSuite with ShouldMatchers with BeforeAndAf
     // write a test thing and start a transaction
     val testPayload = "something-something"
     val routeId = 0
-    val testThing:SpaceThing = generateTestSpaceThing(testPayload, routeId = routeId)
+    val testThing: SpaceThing = generateTestSpaceThing(testPayload, routeId = routeId)
     val spaceId = gigaSpace.write(testThing).getUID
 
     val tm = txnMakerUser.asInstanceOf[TxnMakerUserOnClientSide].transactionMaker
-    val tc = txnMakerUser.getClass
-
     logger.trace(s"$tm")
+    val tc = txnMakerUser.getClass
     logger.trace(s"$tc")
 
-    val txn = Future {
-      txnMakerUser.longTransaction(routeId, spaceId, 10)
-      "done"
+    (1 to 5).foreach { x =>
+      doUpdate(routeId, spaceId, 1800)
     }
-    val read = Future{
+
+    doRead(spaceId)
+
+  }
+
+  def doRead(spaceId: String): Future[SpaceThing] = {
+    val startTime = System.currentTimeMillis()
+    val read = Future {
       gigaSpace.readById(classOf[SpaceThing], spaceId, 1)
     }
-
-    var failed = false
-
-    val f = txn.evaluate
-    val g = read.onFailure {
-      case f: RuntimeException => failed = true
+    read.onComplete {
+      case Success(d) => logger.info("Completed read in %s millis.".format(System.currentTimeMillis() - startTime))
+      case Failure(e) =>
+        logger.error("Error during processing.", e)
+        throw new IllegalStateException(e)
     }
+    read
+  }
 
-    assert( failed === true )
-
+  def doUpdate(routeId: Int, spaceId: String, timeout: Int = 1500) {
+    val startTime = System.currentTimeMillis()
+    val update = Future {
+      txnMakerUser.longTransaction(routeId, spaceId, timeout)
+    }
+    update.onComplete {
+      case Success(d) => logger.info("Completed update in %s millis.".format(System.currentTimeMillis() - startTime))
+      case Failure(e) =>
+        logger.error("Error during processing.", e)
+        throw new IllegalStateException(e)
+    }
   }
 
   // TEST DATA GENERATION
 
   def generateTestSpaceThing(payload: String = rand.nextString(8),
                              routeId: Int = rand.nextInt(numPartitions),
-                             spaceId: java.lang.String = null ) : SpaceThing = {
+                             spaceId: java.lang.String = null): SpaceThing = {
 
     val testThing = new SpaceThing
     testThing.setPayload(payload)
