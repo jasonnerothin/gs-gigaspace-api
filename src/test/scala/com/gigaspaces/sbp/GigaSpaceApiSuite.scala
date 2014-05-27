@@ -13,6 +13,8 @@ import concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.ExecutionContext.Implicits.global
 import net.jini.core.transaction.TimeoutExpiredException
 import org.openspaces.core.ChangeException
+import org.springframework.transaction.{TransactionStatus, TransactionDefinition, PlatformTransactionManager}
+import org.springframework.transaction.support.DefaultTransactionDefinition
 
 /** Created by IntelliJ IDEA.
   * User: jason
@@ -47,7 +49,10 @@ class GigaSpaceApiSuite extends GsI10nSuite with ShouldMatchers with BeforeAndAf
   // SETUP METHODS
   override def beforeAll(cm: ConfigMap): Unit = {
     setupWith(defaultConfigMap)
+
+
   }
+
 
   override def beforeEach(): Unit = {
   }
@@ -55,15 +60,12 @@ class GigaSpaceApiSuite extends GsI10nSuite with ShouldMatchers with BeforeAndAf
   override def afterAll(cm: ConfigMap): Unit = {
   }
 
-  def loadContext(descriptor: String = s"classpath:${spaceName}Client.xml"): ClassPathXmlApplicationContext = {
-    new ClassPathXmlApplicationContext(descriptor)
-  }
 
   // TESTS
 
   lazy val txnMakerUser = clientContext.getBean("txnMakerUserOnClientSide").asInstanceOf[TxnMakerUserOnClientSide]
 
-  test("test read timeout throws ") {
+  test("test read timeout throws") {
 
     // write a test thing and start a transaction
     val testPayload = "something-something"
@@ -71,29 +73,41 @@ class GigaSpaceApiSuite extends GsI10nSuite with ShouldMatchers with BeforeAndAf
     val testThing: SpaceThing = generateTestSpaceThing(testPayload, routeId = routeId)
     val spaceId = gigaSpace.write(testThing).getUID
 
-    (1 to 512).foreach { up =>
-      doUpdate(routeId, spaceId, 100) andThen {
-        case _ =>
-          (1 to 4).foreach { rd =>
-            doRead(spaceId) andThen {
-              case Success(th) => doUpdate(routeId, spaceId, 5); doRead(spaceId)
-              case Failure(e) => throw e // desired outcome
-            }
-          }
-      }
-    }
+    val txn:TransactionStatus = txnMgr.getTransaction(new TxnDef(timeout = 100))
 
-    Thread.sleep(5000)
+    doRead(spaceId) // timeout = 1 ms
+    doRead(spaceId)
+    doRead(spaceId)
+    doUpdate(routeId, spaceId, timeout = 5)
+    doRead(spaceId)
+    doRead(spaceId)
+    doRead(spaceId)
+
+    txnMgr.rollback(txn)
 
   }
 
+  class TxnDef(timeout: Int = 10, readOnly: Boolean = true) extends TransactionDefinition{
+
+    override def getPropagationBehavior = TransactionDefinition.PROPAGATION_REQUIRED
+
+    override def getName = rand.nextString(8)
+
+    override def getIsolationLevel = TransactionDefinition.ISOLATION_READ_COMMITTED
+
+    override def getTimeout = timeout
+
+    override def isReadOnly = readOnly
+  }
+
   def doRead(spaceId: String): Future[SpaceThing] = {
-    val startTime = System.currentTimeMillis()
+    var startTime:Long = 0
     val read = Future {
+      startTime = System.currentTimeMillis()
       gigaSpace.readById(classOf[SpaceThing], spaceId, 1)
     }
     read.onComplete {
-      case Success(d) => logger.info("Completed read in %s millis.".format(System.currentTimeMillis() - startTime))
+      case Success(d) => logger.info("Read in {} millis.", System.currentTimeMillis() - startTime )
       case Failure(e) =>
         logger.error("Error during read", e)
         throw e
@@ -102,18 +116,29 @@ class GigaSpaceApiSuite extends GsI10nSuite with ShouldMatchers with BeforeAndAf
   }
 
   def doUpdate(routeId: Int, spaceId: String, timeout: Int = 1500): Future[Unit] = {
-    val startTime = System.currentTimeMillis()
-    def elapsedTime = System.currentTimeMillis() - startTime
+    var startTime: Long = 0
     val update = Future {
+      startTime = System.currentTimeMillis()
       txnMakerUser.longTransaction(routeId, spaceId, timeout)
     }
     update.onComplete {
-      case Success(_) => logger.info("Update in {} millis.", elapsedTime)
-      case Failure(swallowMe: ChangeException) => logger.info("Update thread lock (timeout) in {}.", elapsedTime)
+      case Success(_) => logger.info("Update in {} millis.", System.currentTimeMillis() - startTime)
+      case Failure(swallowMe: ChangeException) => logger.info("Update thread lock (timeout) in {}.", System.currentTimeMillis() - startTime)
       case Failure(e) => throw e
     }
     update
   }
+
+  // HELPER METHODS
+
+  def loadContext(descriptor: String = s"classpath:${spaceName}Client.xml"): ClassPathXmlApplicationContext = {
+    new ClassPathXmlApplicationContext(descriptor)
+  }
+
+  def txnMgr : PlatformTransactionManager = {
+    clientContext.getBean("transactionManager").asInstanceOf[PlatformTransactionManager]
+  }
+
 
   // TEST DATA GENERATION
 
