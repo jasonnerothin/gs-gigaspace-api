@@ -70,11 +70,6 @@ class GigaSpaceApiSuite extends GsI10nSuite with ShouldMatchers with BeforeAndAf
     val testThing: SpaceThing = generateTestSpaceThing(testPayload, routeId = routeId)
     val spaceId = gigaSpace.write(testThing).getUID
 
-    val tm = txnMakerUser.asInstanceOf[TxnMakerUserOnClientSide].transactionMaker
-    logger.trace(s"$tm")
-    val tc = txnMakerUser.getClass
-    logger.trace(s"$tc")
-
     (1 to 5).foreach { x =>
       doUpdate(routeId, spaceId, 1800)
     }
