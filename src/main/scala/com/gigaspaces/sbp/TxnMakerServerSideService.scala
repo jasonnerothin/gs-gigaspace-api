@@ -1,6 +1,6 @@
 package com.gigaspaces.sbp
 
-import org.springframework.transaction.annotation.{Propagation, Transactional}
+import org.springframework.transaction.annotation.{Isolation, Propagation, Transactional}
 import com.gigaspaces.query.IdQuery
 import org.openspaces.remoting.RemotingService
 import com.gigaspaces.client.ChangeSet
@@ -29,7 +29,7 @@ class TxnMakerServerSideService extends TransactionMaker {
     * @param spaceId id for the thing to work on
     * @param howLongInMillis minimum amount of time it will take to complete this transaction
     */
-  @Transactional(propagation = Propagation.REQUIRED)
+  @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.READ_COMMITTED)
   def longTransaction(routeId: Integer, spaceId: java.lang.String, howLongInMillis: Integer = 50): Unit = {
 
     logger.trace("long transaction received...")

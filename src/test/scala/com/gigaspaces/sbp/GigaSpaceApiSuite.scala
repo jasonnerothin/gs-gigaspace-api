@@ -49,17 +49,7 @@ class GigaSpaceApiSuite extends GsI10nSuite with ShouldMatchers with BeforeAndAf
   // SETUP METHODS
   override def beforeAll(cm: ConfigMap): Unit = {
     setupWith(defaultConfigMap)
-
-
   }
-
-
-  override def beforeEach(): Unit = {
-  }
-
-  override def afterAll(cm: ConfigMap): Unit = {
-  }
-
 
   // TESTS
 
@@ -134,7 +124,6 @@ class GigaSpaceApiSuite extends GsI10nSuite with ShouldMatchers with BeforeAndAf
   def txnMgr : PlatformTransactionManager = {
     clientContext.getBean("transactionManager").asInstanceOf[PlatformTransactionManager]
   }
-
 
   // TEST DATA GENERATION
 
