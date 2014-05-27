@@ -6,7 +6,7 @@
         </encoder>
     </appender>
 
-    <!--<logger name="com.gigaspaces.sbp.TransactionMaker" level="trace"/>-->
+    <logger name="com.gigaspaces.sbp.GigaSpaceApiSuite" level="trace"/>
 
     <root level="info">
         <appender-ref ref="STDOUT" />

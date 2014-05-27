@@ -7,7 +7,8 @@ import com.j_spaces.core.client.SQLQuery
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import org.slf4j.{Logger, LoggerFactory}
 import org.specs2.matcher.ShouldMatchers
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
+import concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -22,8 +23,7 @@ class GigaSpaceApiSuite extends GsI10nSuite with ShouldMatchers with BeforeAndAf
 
   val logger:Logger = LoggerFactory.getLogger(getClass)
 
-  // SETUP STUFF
-
+  // SETUP CONFIG
   val rand = new Random(System.currentTimeMillis())
   val numPartitions = 1
   val spaceName = classOf[GigaSpaceApiSuite].getSimpleName
@@ -42,22 +42,15 @@ class GigaSpaceApiSuite extends GsI10nSuite with ShouldMatchers with BeforeAndAf
   val defaultConfigMap = new ConfigMap(defaults)
   lazy val clientContext: ClassPathXmlApplicationContext = loadContext()
 
-
-
-  // initialization methods
-
+  // SETUP METHODS
   override def beforeAll(cm: ConfigMap): Unit = {
-
     setupWith(defaultConfigMap)
-
   }
 
   override def beforeEach(): Unit = {
-
   }
 
   override def afterAll(cm: ConfigMap) : Unit = {
-//    ec.shutdown()
   }
 
   def loadContext(descriptor: String = s"classpath:${spaceName}Client.xml") : ClassPathXmlApplicationContext = {
@@ -76,11 +69,28 @@ class GigaSpaceApiSuite extends GsI10nSuite with ShouldMatchers with BeforeAndAf
     val testThing:SpaceThing = generateTestSpaceThing(testPayload, routeId = routeId)
     val spaceId = gigaSpace.write(testThing).getUID
 
-    val future = Future {
+    val tm = txnMakerUser.asInstanceOf[TxnMakerUserOnClientSide].transactionMaker
+    val tc = txnMakerUser.getClass
+
+    logger.trace(s"$tm")
+    logger.trace(s"$tc")
+
+    val txn = Future {
       txnMakerUser.longTransaction(routeId, spaceId, 10)
+      "done"
+    }
+    val read = Future{
+      gigaSpace.readById(classOf[SpaceThing], spaceId, 1)
     }
 
-    gigaSpace.readById(classOf[SpaceThing], spaceId, 1) // read before the previous
+    var failed = false
+
+    val f = txn.evaluate
+    val g = read.onFailure {
+      case f: RuntimeException => failed = true
+    }
+
+    assert( failed === true )
 
   }
 

@@ -14,13 +14,18 @@ import org.springframework.stereotype.Component;
 public class TxnMakerUserOnClientSide {
 
     @ExecutorProxy
-    private TransactionMaker transactionMaker;
+    public TransactionMaker transactionMaker;
+
+    public TxnMakerUserOnClientSide() {
+    }
+
+    public TxnMakerUserOnClientSide(TransactionMaker transactionMaker) {
+        assert transactionMaker != null : "null does not work here";
+        this.transactionMaker = transactionMaker;
+    }
 
     public void longTransaction(Integer routeId, String spaceId, Integer howLongInMillis) {
         transactionMaker.longTransaction(routeId, spaceId, howLongInMillis);
     }
 
-//    public void setTransactionMaker(TransactionMaker transactionMaker) {
-//        this.transactionMaker = transactionMaker;
-//    }
 }
