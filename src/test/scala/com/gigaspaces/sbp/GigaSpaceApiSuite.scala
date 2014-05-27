@@ -78,7 +78,7 @@ class GigaSpaceApiSuite extends GsI10nSuite with ShouldMatchers with BeforeAndAf
     doRead(spaceId) // timeout = 1 ms
     doRead(spaceId)
     doRead(spaceId)
-    doUpdate(routeId, spaceId, timeout = 5)
+    doUpdate(routeId, spaceId, timeout = 50)
     doRead(spaceId)
     doRead(spaceId)
     doRead(spaceId)
@@ -93,7 +93,7 @@ class GigaSpaceApiSuite extends GsI10nSuite with ShouldMatchers with BeforeAndAf
 
     override def getName = rand.nextString(8)
 
-    override def getIsolationLevel = TransactionDefinition.ISOLATION_READ_COMMITTED
+    override def getIsolationLevel = TransactionDefinition.ISOLATION_REPEATABLE_READ
 
     override def getTimeout = timeout
 
@@ -101,30 +101,26 @@ class GigaSpaceApiSuite extends GsI10nSuite with ShouldMatchers with BeforeAndAf
   }
 
   def doRead(spaceId: String): Future[SpaceThing] = {
-    var startTime:Long = 0
     val read = Future {
-      startTime = System.currentTimeMillis()
+      logger.trace("Read submitted.")
       gigaSpace.readById(classOf[SpaceThing], spaceId, 1)
     }
     read.onComplete {
-      case Success(d) => logger.info("Read in {} millis.", System.currentTimeMillis() - startTime )
-      case Failure(e) =>
-        logger.error("Error during read", e)
-        throw e
+      case Success(d) => logger.trace("Read complete.")
+      case Failure(e) => logger.error("Error during read", e); throw e
     }
     read
   }
 
   def doUpdate(routeId: Int, spaceId: String, timeout: Int = 1500): Future[Unit] = {
-    var startTime: Long = 0
     val update = Future {
-      startTime = System.currentTimeMillis()
+      logger.trace("Update submitted.")
       txnMakerUser.longTransaction(routeId, spaceId, timeout)
     }
     update.onComplete {
-      case Success(_) => logger.info("Update in {} millis.", System.currentTimeMillis() - startTime)
-      case Failure(swallowMe: ChangeException) => logger.info("Update thread lock (timeout) in {}.", System.currentTimeMillis() - startTime)
-      case Failure(e) => throw e
+      case Success(s) => logger.trace("Update complete.")
+      case Failure(swallowMe: ChangeException) => logger.debug("|XXX> Update [timeout] <XXX|")
+      case Failure(e) => logger.error("!!! Update failure! !!!"); throw e
     }
     update
   }
