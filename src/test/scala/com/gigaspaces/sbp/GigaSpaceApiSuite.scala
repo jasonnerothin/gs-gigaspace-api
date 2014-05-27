@@ -71,12 +71,12 @@ class GigaSpaceApiSuite extends GsI10nSuite with ShouldMatchers with BeforeAndAf
     val testThing: SpaceThing = generateTestSpaceThing(testPayload, routeId = routeId)
     val spaceId = gigaSpace.write(testThing).getUID
 
-    (1 to 25).foreach { up =>
-      doUpdate(routeId, spaceId, 50) andThen {
+    (1 to 512).foreach { up =>
+      doUpdate(routeId, spaceId, 100) andThen {
         case _ =>
-          (1 to 25).foreach { rd =>
+          (1 to 4).foreach { rd =>
             doRead(spaceId) andThen {
-              case Success(th) => doUpdate(routeId, spaceId, 25); doRead(spaceId)
+              case Success(th) => doUpdate(routeId, spaceId, 5); doRead(spaceId)
               case Failure(e) => throw e // desired outcome
             }
           }
