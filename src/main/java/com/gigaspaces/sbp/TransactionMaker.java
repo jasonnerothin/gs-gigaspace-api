@@ -1,5 +1,8 @@
 package com.gigaspaces.sbp;
 
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
 /**
  * Created by IntelliJ IDEA.
  * User: jason
@@ -14,6 +17,7 @@ public interface TransactionMaker {
      * @param spaceId id for the thing to work on
      * @param howLongInMillis minimum amount of time it will take to complete this transaction
      */
+    @Transactional(propagation=Propagation.REQUIRED)
     void longTransaction(Integer routeId, String spaceId, Integer howLongInMillis);
 
 }

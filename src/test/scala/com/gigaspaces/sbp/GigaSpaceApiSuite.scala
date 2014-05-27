@@ -12,6 +12,7 @@ import concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import net.jini.core.transaction.TimeoutExpiredException
+import org.openspaces.core.ChangeException
 
 /** Created by IntelliJ IDEA.
   * User: jason
@@ -70,11 +71,19 @@ class GigaSpaceApiSuite extends GsI10nSuite with ShouldMatchers with BeforeAndAf
     val testThing: SpaceThing = generateTestSpaceThing(testPayload, routeId = routeId)
     val spaceId = gigaSpace.write(testThing).getUID
 
-    (1 to 5).foreach { x =>
-      doUpdate(routeId, spaceId, 1800)
+    (1 to 25).foreach { up =>
+      doUpdate(routeId, spaceId, 50) andThen {
+        case _ =>
+          (1 to 25).foreach { rd =>
+            doRead(spaceId) andThen {
+              case Success(th) => doUpdate(routeId, spaceId, 25); doRead(spaceId)
+              case Failure(e) => throw e // desired outcome
+            }
+          }
+      }
     }
 
-    doRead(spaceId)
+    Thread.sleep(5000)
 
   }
 
@@ -86,23 +95,24 @@ class GigaSpaceApiSuite extends GsI10nSuite with ShouldMatchers with BeforeAndAf
     read.onComplete {
       case Success(d) => logger.info("Completed read in %s millis.".format(System.currentTimeMillis() - startTime))
       case Failure(e) =>
-        logger.error("Error during processing.", e)
-        throw new IllegalStateException(e)
+        logger.error("Error during read", e)
+        throw e
     }
     read
   }
 
-  def doUpdate(routeId: Int, spaceId: String, timeout: Int = 1500) {
+  def doUpdate(routeId: Int, spaceId: String, timeout: Int = 1500): Future[Unit] = {
     val startTime = System.currentTimeMillis()
+    def elapsedTime = System.currentTimeMillis() - startTime
     val update = Future {
       txnMakerUser.longTransaction(routeId, spaceId, timeout)
     }
     update.onComplete {
-      case Success(d) => logger.info("Completed update in %s millis.".format(System.currentTimeMillis() - startTime))
-      case Failure(e) =>
-        logger.error("Error during processing.", e)
-        throw new IllegalStateException(e)
+      case Success(_) => logger.info("Update in {} millis.", elapsedTime)
+      case Failure(swallowMe: ChangeException) => logger.info("Update thread lock (timeout) in {}.", elapsedTime)
+      case Failure(e) => throw e
     }
+    update
   }
 
   // TEST DATA GENERATION
