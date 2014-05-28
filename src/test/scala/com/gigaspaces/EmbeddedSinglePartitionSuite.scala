@@ -12,7 +12,8 @@ import com.gigaspaces.sbp.SpaceMode
   * Date: 5/27/14
   * Time: 6:10 PM
   */
-abstract class EmbeddedSinglePartitionSuite extends GsI10nSuite
+abstract class EmbeddedSinglePartitionSuite
+  extends GsI10nSuite
   with BeforeAndAfterAllConfigMap
   with ShouldMatchers {
 
@@ -23,7 +24,7 @@ abstract class EmbeddedSinglePartitionSuite extends GsI10nSuite
     , numInstancesProperty -> int2Integer(numPartitions)
     , numBackupsProperty -> int2Integer(0)
     , instanceIdProperty -> int2Integer(1)
-    , spaceUrlProperty -> s"jini:/*/*/ReadTimeoutSuite?groups=gigaspaceApi"
+    , spaceUrlProperty -> s"jini:/*/*/ReadTimeoutSuite"
     , spaceModeProperty -> SpaceMode.Embedded
     , configLocationProperty -> s"classpath:${spaceName}Server.xml"
     , localViewQueryListProperty -> List[SQLQuery[_]]()
@@ -43,6 +44,12 @@ abstract class EmbeddedSinglePartitionSuite extends GsI10nSuite
   // HELPER METHODS
   def loadContext(descriptor: String = s"classpath:${spaceName}Client.xml"): ClassPathXmlApplicationContext = {
     new ClassPathXmlApplicationContext(descriptor)
+  }
+
+  /* convenience methods */
+  protected def spaceContents(): Int = {
+    assume(gigaSpace != null)
+    gigaSpace.count(new Object())
   }
 
 }

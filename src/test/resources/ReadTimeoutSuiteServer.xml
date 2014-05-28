@@ -18,7 +18,7 @@
     <os-core:distributed-tx-manager id="transactionManager"/>
 
     <tx:annotation-driven transaction-manager="transactionManager"/>
-    <os-core:space id="space" url="/./ReadTimeoutSuite?groups=fooBarBaz" />
+    <os-core:space id="space" url="/./ReadTimeoutSuite" />
     <os-core:giga-space id="gigaSpace" space="space" tx-manager="transactionManager"/>
 
     <os-remoting:service-exporter id="serviceExporter"/>

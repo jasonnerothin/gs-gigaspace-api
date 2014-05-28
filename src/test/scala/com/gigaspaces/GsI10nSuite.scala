@@ -39,14 +39,6 @@ abstract class GsI10nSuite
    * Test instances. The purpose of this class is to initialize these members
    */
   protected var container: ProcessingUnitContainer = null
-  implicit val gigaSpace: GigaSpace
-
-  /* convenience methods */
-
-  protected def spaceContents(): Int = {
-    assume(gigaSpace != null)
-    gigaSpace.count(new Object())
-  }
 
   /* Default setup/tear-down behaviors */
 
