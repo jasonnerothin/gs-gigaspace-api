@@ -31,7 +31,7 @@ import org.openspaces.pu.container.integrated.IntegratedProcessingUnitContainerP
   * Time: 3:25 PM
   *
   * An abstract test suite that can be used to instrument scala tests that start up a
-  * new container sin standalone mode and then create a [[GigaSpace]] reference into it.
+  * new container in then create a [[GigaSpace]] reference into it.
   */
 abstract class GsI10nSuite extends FunSuite with BeforeAndAfterAllConfigMap with BeforeAndAfterEach {
 
@@ -50,7 +50,7 @@ abstract class GsI10nSuite extends FunSuite with BeforeAndAfterAllConfigMap with
    * Test instances. The purpose of this class is to initialize these members
    */
   protected var container: ProcessingUnitContainer = null
-  protected var gigaSpace: GigaSpace = null
+  implicit val gigaSpace: GigaSpace
 
   object SpaceMode extends Enumeration {
     type SpaceMode = Value
@@ -70,7 +70,6 @@ abstract class GsI10nSuite extends FunSuite with BeforeAndAfterAllConfigMap with
 
   protected def setupWith(configMap: ConfigMap): Unit = {
     container = createContainer(configMap)
-    gigaSpace = createGigaSpace(configMap)
   }
 
   override def afterAll(configMap: ConfigMap = new ConfigMap(Map[String, Any]())): Unit = {
@@ -106,7 +105,7 @@ abstract class GsI10nSuite extends FunSuite with BeforeAndAfterAllConfigMap with
 
   }
 
-  private def createGigaSpace(configMap: ConfigMap = new ConfigMap(Map[String, Any]())): GigaSpace = {
+  protected def createGigaSpace(configMap: ConfigMap = new ConfigMap(Map[String, Any]())): GigaSpace = {
 
     def makeGs(configurer: UrlSpaceConfigurer): GigaSpace = {
       new GigaSpaceConfigurer(configurer).gigaSpace()
