@@ -5,17 +5,20 @@ import com.j_spaces.core.client.SQLQuery
 import org.scalatest.{BeforeAndAfterAllConfigMap, ConfigMap}
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import org.scalatest.ShouldMatchers
+import org.openspaces.core.GigaSpace
+import com.gigaspaces.sbp.SpaceMode
 
 /** User: jason
   * Date: 5/27/14
   * Time: 6:10 PM
   */
 abstract class EmbeddedSinglePartitionSuite extends GsI10nSuite
-  with BeforeAndAfterAllConfigMap with ShouldMatchers {
+  with BeforeAndAfterAllConfigMap
+  with ShouldMatchers {
 
   val spaceName = getClass.getSimpleName
 
-  defaults = Map[String, Any](
+  val defaultsMap = Map[String, Any](
     schemaProperty -> "partitioned-sync2backup"
     , numInstancesProperty -> int2Integer(numPartitions)
     , numBackupsProperty -> int2Integer(0)
@@ -29,8 +32,8 @@ abstract class EmbeddedSinglePartitionSuite extends GsI10nSuite
   lazy val clientContext: ClassPathXmlApplicationContext = loadContext()
 
   val numPartitions = 1
-  val defaultConfigMap = new ConfigMap(defaults)
-  val gigaSpace = createGigaSpace(configMap = defaultConfigMap)
+  val defaultConfigMap = new ConfigMap(defaultsMap)
+  implicit val gigaSpace: GigaSpace
 
   // SETUP METHODS
   override def beforeAll(cm: ConfigMap): Unit = {

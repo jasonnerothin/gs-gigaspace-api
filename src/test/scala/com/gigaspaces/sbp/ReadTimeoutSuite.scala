@@ -6,7 +6,7 @@ import org.springframework.transaction.TransactionStatus
 import scala.concurrent.ExecutionContext
 import scala.util.Random
 import scala.concurrent.ExecutionContext.Implicits
-import com.gigaspaces.EmbeddedSinglePartitionSuite
+import com.gigaspaces.{ConfigMapGet, EmbeddedSinglePartitionSuite}
 
 /** User: jason
   * Date: 4/27/14
@@ -17,11 +17,14 @@ import com.gigaspaces.EmbeddedSinglePartitionSuite
 class ReadTimeoutSuite extends EmbeddedSinglePartitionSuite
   with TxnMgrLookup with TxnMakerUserLookup
   with GridRead with GridUpdate
+  with ClientGigaSpace
+  with ConfigMapGet
   with TestDataGeneration {
 
   val logger: Logger = LoggerFactory.getLogger(getClass)
   val txnMakerUser = lookupTxnMakerUser()
   val rand = new Random(System.currentTimeMillis())
+  val gigaSpace = createGigaSpace(configMap = defaultConfigMap)
 
   val executionContext: ExecutionContext = Implicits.global
 
