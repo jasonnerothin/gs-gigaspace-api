@@ -1,15 +1,16 @@
-package com.gigaspaces.sbp
+package com.gigaspaces.sbp.spaceoperations
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 import org.openspaces.core.ChangeException
 import org.slf4j.Logger
+import com.gigaspaces.sbp.TxnMakerUserOnClientSide
 
 /** User: jason
   * Date: 5/27/14
   * Time: 6:25 PM
   */
-trait GridUpdate {
+trait UpdatesSpaceThing {
 
   implicit val txnMakerUser: TxnMakerUserOnClientSide
   implicit val logger: Logger

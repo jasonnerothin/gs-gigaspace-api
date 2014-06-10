@@ -1,4 +1,4 @@
-package com.gigaspaces.sbp
+package com.gigaspaces.sbp.springbeanlookup
 
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.context.support.ClassPathXmlApplicationContext

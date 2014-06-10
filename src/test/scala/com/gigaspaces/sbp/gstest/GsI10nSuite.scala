@@ -14,10 +14,9 @@
  *   limitations under the License.
  */
 
-package com.gigaspaces
+package com.gigaspaces.sbp.gstest
 
 import org.scalatest._
-import org.openspaces.core.GigaSpace
 import org.openspaces.core.cluster.ClusterInfo
 import org.openspaces.pu.container.ProcessingUnitContainer
 import org.openspaces.pu.container.integrated.IntegratedProcessingUnitContainerProvider
@@ -28,11 +27,11 @@ import org.openspaces.pu.container.integrated.IntegratedProcessingUnitContainerP
   * Time: 3:25 PM
   *
   * An abstract test suite that can be used to instrument scala tests that start up a
-  * new container in then create a [[GigaSpace]] reference into it.
+  * new container in then create a [[org.openspaces.core.GigaSpace]] reference into it.
   */
 abstract class GsI10nSuite
   extends FunSuite
-  with ConfigMapGet
+  with GetFromConfigMap
   with BeforeAndAfterAllConfigMap {
 
   /**

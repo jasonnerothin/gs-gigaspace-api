@@ -1,4 +1,4 @@
-package com.gigaspaces.sbp
+package com.gigaspaces.sbp.spaceoperations
 
 import org.springframework.transaction.TransactionDefinition
 import scala.util.Random

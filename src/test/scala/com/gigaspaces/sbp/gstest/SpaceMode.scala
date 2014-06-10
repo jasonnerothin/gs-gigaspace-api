@@ -1,4 +1,4 @@
-package com.gigaspaces.sbp
+package com.gigaspaces.sbp.gstest
 
 /** User: jason
   * Date: 5/27/14

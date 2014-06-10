@@ -1,4 +1,4 @@
-package com.gigaspaces
+package com.gigaspaces.sbp.gstest
 
 import org.scalatest.ConfigMap
 
@@ -6,7 +6,7 @@ import org.scalatest.ConfigMap
   * Date: 5/27/14
   * Time: 8:47 PM
   */
-trait ConfigMapGet {
+trait GetFromConfigMap {
 
   val schemaProperty = "schema"
   val spaceUrlProperty = "spaceUrl"

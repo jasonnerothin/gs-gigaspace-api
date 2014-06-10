@@ -1,6 +1,7 @@
-package com.gigaspaces.sbp
+package com.gigaspaces.sbp.springbeanlookup
 
 import org.springframework.context.support.ClassPathXmlApplicationContext
+import com.gigaspaces.sbp.TxnMakerUserOnClientSide
 
 /** User: jason
   * Date: 5/27/14

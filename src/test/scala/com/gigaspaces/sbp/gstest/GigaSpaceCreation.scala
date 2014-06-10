@@ -1,20 +1,20 @@
-package com.gigaspaces.sbp
+package com.gigaspaces.sbp.gstest
 
 import org.scalatest.ConfigMap
 import org.openspaces.core.{GigaSpaceConfigurer, GigaSpace}
 import org.openspaces.core.space.UrlSpaceConfigurer
 import org.openspaces.core.space.cache.{LocalViewSpaceConfigurer, LocalCacheSpaceConfigurer}
 import com.j_spaces.core.client.SQLQuery
-import com.gigaspaces.ConfigMapGet
 
 /**
- * Created by IntelliJ IDEA.
- * User: jason
- * Date: 5/27/14
- * Time: 8:41 PM
- * Provides...
- */
-trait ClientGigaSpace extends ConfigMapGet{
+  * Created by IntelliJ IDEA.
+  * User: jason
+  * Date: 5/27/14
+  * Time: 8:41 PM
+  * Provides a mechanism for creating a [[GigaSpace]] reference from a
+  * [[ConfigMap]].
+  */
+trait GigaSpaceCreation extends GetFromConfigMap{
 
   import SpaceMode._
 
@@ -44,6 +44,5 @@ trait ClientGigaSpace extends ConfigMapGet{
     }
 
   }
-
 
 }

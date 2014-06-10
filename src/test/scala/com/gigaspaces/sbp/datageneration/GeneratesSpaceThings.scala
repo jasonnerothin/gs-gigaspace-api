@@ -1,12 +1,13 @@
-package com.gigaspaces.sbp
+package com.gigaspaces.sbp.datageneration
 
 import scala.util.Random
+import com.gigaspaces.sbp.SpaceThing
 
 /** User: jason
   * Date: 5/27/14
   * Time: 6:17 PM
   */
-trait TestDataGeneration {
+trait GeneratesSpaceThings {
 
   implicit val numPartitions: Int
   implicit val rand: Random

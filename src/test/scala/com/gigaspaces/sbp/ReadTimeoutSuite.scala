@@ -6,7 +6,10 @@ import org.springframework.transaction.TransactionStatus
 import scala.concurrent.ExecutionContext
 import scala.util.Random
 import scala.concurrent.ExecutionContext.Implicits
-import com.gigaspaces.{ConfigMapGet, EmbeddedSinglePartitionSuite}
+import com.gigaspaces.sbp.springbeanlookup.{TxnMakerUserLookup, TxnMgrLookup}
+import com.gigaspaces.sbp.spaceoperations.{StrictTransactionDefinition, UpdatesSpaceThing, ReadsSpaceThingById}
+import com.gigaspaces.sbp.datageneration.GeneratesSpaceThings
+import com.gigaspaces.sbp.gstest.{GigaSpaceCreation, EmbeddedSinglePartitionSuite, GetFromConfigMap}
 
 /** User: jason
   * Date: 4/27/14
@@ -15,11 +18,13 @@ import com.gigaspaces.{ConfigMapGet, EmbeddedSinglePartitionSuite}
   * should be installed at src/test/resources/gslicense.xml
   */
 class ReadTimeoutSuite extends EmbeddedSinglePartitionSuite
-  with TxnMgrLookup with TxnMakerUserLookup
-  with GridRead with GridUpdate
-  with ClientGigaSpace
-  with ConfigMapGet
-  with TestDataGeneration {
+  with GetFromConfigMap
+  with GigaSpaceCreation
+  with TxnMgrLookup
+  with TxnMakerUserLookup
+  with ReadsSpaceThingById
+  with UpdatesSpaceThing
+  with GeneratesSpaceThings {
 
   val logger: Logger = LoggerFactory.getLogger(getClass)
   val txnMakerUser = lookupTxnMakerUser()
@@ -28,7 +33,7 @@ class ReadTimeoutSuite extends EmbeddedSinglePartitionSuite
 
   val executionContext: ExecutionContext = Implicits.global
 
-  test("readById timeout throws") {
+  test("readById timeout returns null") {
 
     // write a test thing and start a transaction
     val testPayload = "something-something"

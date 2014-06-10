@@ -11,7 +11,7 @@
 
     <os-core:distributed-tx-manager id="transactionManager" />
     <tx:annotation-driven transaction-manager="transactionManager"/>
-    <os-core:space id="space" url="jini:/*/*/ReadTimeoutSuite"/>
+    <os-core:space id="space" url="/./ReadTimeoutSuite"/>
     <os-core:giga-space id="gigaSpace" space="space" tx-manager="transactionManager"/>
 
     <os-remoting:executor-proxy id="txnMaker"
