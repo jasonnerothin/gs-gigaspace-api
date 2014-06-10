@@ -30,7 +30,7 @@ abstract class EmbeddedSinglePartitionSuite
     , instanceIdProperty -> int2Integer(1)
     , spaceUrlProperty -> s"/./$spaceName"
     , spaceModeProperty -> SpaceMode.Embedded
-    , configLocationProperty -> s"classpath:${spaceName}Server.xml"
+    , configLocationProperty -> s"classpath:${spaceName}Client.xml"
     , localViewQueryListProperty -> List[SQLQuery[_]]()
   )
   val defaultConfigMap = new ConfigMap(defaultsMap)
@@ -43,7 +43,7 @@ abstract class EmbeddedSinglePartitionSuite
   }
 
   // HELPER METHODS
-  def loadContext(descriptor: String = s"classpath:${spaceName}Client.xml"): ClassPathXmlApplicationContext = {
+  def loadContext(descriptor: String = s"classpath:${spaceName}Server.xml"): ClassPathXmlApplicationContext = {
     new ClassPathXmlApplicationContext(descriptor)
   }
 
